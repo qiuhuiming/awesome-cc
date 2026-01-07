@@ -33,7 +33,7 @@ dependencies = [
 ]
 
 [project.scripts]
-acc-install = "awesome_cc.cli:app"
+ace = "awesome_cc.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/qiuhuiming/awesome-cc"

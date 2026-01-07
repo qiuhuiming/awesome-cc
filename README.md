@@ -32,20 +32,20 @@ Use the CLI installer to selectively install commands and skills:
 
 ```bash
 # List available commands and skills
-uvx --from git+https://github.com/qiuhuiming/awesome-cc acc-install install --list
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --list
 
 # Interactive mode - select what to install
-uvx --from git+https://github.com/qiuhuiming/awesome-cc acc-install install --agent claude-code
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent claude-code
 
 # Install specific items
-uvx --from git+https://github.com/qiuhuiming/awesome-cc acc-install install \
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install \
     --agent claude-code --commands commit --commands code-review --skills uv
 
 # Install all
-uvx --from git+https://github.com/qiuhuiming/awesome-cc acc-install install --agent claude-code --all
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent claude-code --all
 
 # For Codex users
-uvx --from git+https://github.com/qiuhuiming/awesome-cc acc-install install --agent codex --all
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent codex --all
 ```
 
 ## Manual Install
@@ -78,11 +78,11 @@ git clone https://github.com/qiuhuiming/awesome-cc.git
 cd awesome-cc
 
 # List available items
-uv run acc-install install --list
+uv run ace install --list
 
 # Install interactively
-uv run acc-install install --agent claude-code
+uv run ace install --agent claude-code
 
 # Install all
-uv run acc-install install --agent claude-code --all --yes
+uv run ace install --agent claude-code --all --yes
 ```

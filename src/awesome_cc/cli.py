@@ -35,8 +35,8 @@ from .ui import (
 )
 
 app = typer.Typer(
-    name="acc-install",
-    help="Interactive CLI installer for Claude Code skills and commands.",
+    name="ace",
+    help="Awesome Claude Extensions - CLI installer for Claude Code skills and commands.",
     no_args_is_help=True,
 )
 console = Console()
