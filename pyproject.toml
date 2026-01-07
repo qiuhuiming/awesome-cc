@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "awesome-cc"
+version = "0.1.0"
+description = "Interactive CLI installer for Claude Code skills and commands"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "qiuhuiming"}
+]
+keywords = ["claude", "claude-code", "codex", "cli", "installer"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0",
+    "questionary>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+acc-install = "awesome_cc.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/qiuhuiming/awesome-cc"
+Repository = "https://github.com/qiuhuiming/awesome-cc"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.sh", "*.py", "*.toml", "*.txt"]
+
+[tool.setuptools]
+include-package-data = true
+
+# Include commands and skills directories in the distribution
+[tool.setuptools.data-files]
+"share/awesome-cc/commands" = [
+    "commands/ask-mode.md",
+    "commands/code-review.md",
+    "commands/commit.md",
+    "commands/make-command.md",
+    "commands/proactive-ask.md",
+    "commands/prompt-engineer.md",
+]
+"share/awesome-cc/skills/codex-review" = ["skills/codex-review/SKILL.md"]
+"share/awesome-cc/skills/codex-review/scripts" = [
+    "skills/codex-review/scripts/detect-base-branch.sh",
+    "skills/codex-review/scripts/review-code.sh",
+    "skills/codex-review/scripts/review-plan.sh",
+]
+"share/awesome-cc/skills/skill-creator" = ["skills/skill-creator/SKILL.md", "skills/skill-creator/LICENSE.txt"]
+"share/awesome-cc/skills/skill-creator/scripts" = [
+    "skills/skill-creator/scripts/init_skill.py",
+    "skills/skill-creator/scripts/package_skill.py",
+    "skills/skill-creator/scripts/quick_validate.py",
+]
+"share/awesome-cc/skills/skill-share" = ["skills/skill-share/SKILL.md"]
+"share/awesome-cc/skills/template-skill" = ["skills/template-skill/SKILL.md"]
+"share/awesome-cc/skills/uv" = ["skills/uv/SKILL.md"]
+"share/awesome-cc/skills/uv/references" = [
+    "skills/uv/references/cli_reference.md",
+    "skills/uv/references/configuration.md",
+    "skills/uv/references/troubleshooting.md",
+]
+"share/awesome-cc/skills/uv/assets/pyproject_templates" = [
+    "skills/uv/assets/pyproject_templates/basic.toml",
+    "skills/uv/assets/pyproject_templates/advanced.toml",
+    "skills/uv/assets/pyproject_templates/gitlab.toml",
+]
+"share/awesome-cc/skills/uv/assets/script_examples" = [
+    "skills/uv/assets/script_examples/data_analysis.py",
+]
