@@ -194,3 +194,93 @@ def show_invalid_names(invalid: list[str], item_type: str, valid_names: list[str
     show_error(f"Unknown {item_type}: {', '.join(invalid)}")
     console.print(f"[dim]Available {item_type}: {', '.join(valid_names)}[/dim]")
     console.print("[dim]Use --list to see all available items.[/dim]")
+
+
+def show_installed_list(commands: list[ItemInfo], skills: list[ItemInfo]) -> None:
+    """Display installed commands and skills."""
+    console.print()
+
+    if commands:
+        console.print("[bold cyan]Installed Commands:[/bold cyan]")
+        for cmd in commands:
+            desc = cmd.description[:70] + "..." if len(cmd.description) > 70 else cmd.description
+            console.print(f"  [green]{cmd.name:<20}[/green] {desc}")
+        console.print()
+
+    if skills:
+        console.print("[bold cyan]Installed Skills:[/bold cyan]")
+        for skill in skills:
+            desc = skill.description[:70] + "..." if len(skill.description) > 70 else skill.description
+            console.print(f"  [green]{skill.name:<20}[/green] {desc}")
+        console.print()
+
+    if not commands and not skills:
+        console.print("[yellow]No commands or skills installed.[/yellow]")
+    else:
+        console.print(f"[dim]Total: {len(commands)} commands, {len(skills)} skills[/dim]")
+
+
+def confirm_uninstall(auto_yes: bool = False) -> bool:
+    """Ask user to confirm uninstallation."""
+    if auto_yes:
+        return True
+
+    return questionary.confirm(
+        "Proceed with uninstallation?",
+        default=False,
+    ).ask() or False
+
+
+def show_uninstall_summary(
+    commands: list[str],
+    skills: list[str],
+    commands_dir: Path,
+    skills_dir: Path,
+) -> None:
+    """Display a summary of what will be uninstalled."""
+    if not commands and not skills:
+        console.print("[yellow]Nothing selected for uninstallation.[/yellow]")
+        return
+
+    table = Table(title="Uninstall Summary", expand=False)
+    table.add_column("Type", style="cyan")
+    table.add_column("Items", style="red")
+    table.add_column("Location", style="dim")
+
+    if commands:
+        table.add_row(
+            f"Commands ({len(commands)})",
+            ", ".join(commands),
+            str(commands_dir),
+        )
+
+    if skills:
+        table.add_row(
+            f"Skills ({len(skills)})",
+            ", ".join(skills),
+            str(skills_dir),
+        )
+
+    console.print()
+    console.print(table)
+    console.print()
+
+
+def show_uninstall_progress(name: str, success: bool, skipped: bool = False) -> None:
+    """Display uninstall progress for a single item."""
+    if skipped:
+        console.print(f"  [yellow]- {name} (skipped)[/yellow]")
+    elif success:
+        console.print(f"  [green]\u2713 {name} (removed)[/green]")
+    else:
+        console.print(f"  [red]\u2717 {name} (failed)[/red]")
+
+
+def show_uninstall_completion(commands_removed: int, skills_removed: int) -> None:
+    """Display uninstall completion message."""
+    console.print()
+    console.print("[bold green]Uninstall complete![/bold green]")
+    if commands_removed > 0:
+        console.print(f"   Commands: {commands_removed} removed")
+    if skills_removed > 0:
+        console.print(f"   Skills: {skills_removed} removed")

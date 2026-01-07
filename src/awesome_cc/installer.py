@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Callable
 
-from .models import InstallResult, ItemInfo
+from .models import InstallResult, ItemInfo, UninstallResult
 
 
 def get_target_dirs(agent: str) -> tuple[Path, Path]:
@@ -175,5 +175,112 @@ def install_items(
         skill_results.append(result)
         if progress_callback:
             progress_callback(result, skills_dir / skill.path.name)
+
+    return command_results, skill_results
+
+
+def uninstall_command(
+    item: ItemInfo,
+    dry_run: bool = False,
+) -> UninstallResult:
+    """
+    Uninstall a single command.
+
+    Args:
+        item: Command to uninstall (path points to the installed file).
+        dry_run: Don't actually delete files.
+
+    Returns:
+        UninstallResult with operation status.
+    """
+    if dry_run:
+        return UninstallResult(name=item.name, success=True)
+
+    try:
+        item.path.unlink()
+        return UninstallResult(name=item.name, success=True)
+    except FileNotFoundError:
+        return UninstallResult(
+            name=item.name,
+            success=False,
+            error=f"File not found: {item.path}",
+        )
+    except PermissionError:
+        return UninstallResult(
+            name=item.name,
+            success=False,
+            error=f"Permission denied: {item.path}",
+        )
+    except Exception as e:
+        return UninstallResult(name=item.name, success=False, error=str(e))
+
+
+def uninstall_skill(
+    item: ItemInfo,
+    dry_run: bool = False,
+) -> UninstallResult:
+    """
+    Uninstall a single skill (entire directory).
+
+    Args:
+        item: Skill to uninstall (path points to the installed directory).
+        dry_run: Don't actually delete files.
+
+    Returns:
+        UninstallResult with operation status.
+    """
+    if dry_run:
+        return UninstallResult(name=item.name, success=True)
+
+    try:
+        shutil.rmtree(item.path)
+        return UninstallResult(name=item.name, success=True)
+    except FileNotFoundError:
+        return UninstallResult(
+            name=item.name,
+            success=False,
+            error=f"Directory not found: {item.path}",
+        )
+    except PermissionError:
+        return UninstallResult(
+            name=item.name,
+            success=False,
+            error=f"Permission denied: {item.path}",
+        )
+    except Exception as e:
+        return UninstallResult(name=item.name, success=False, error=str(e))
+
+
+def uninstall_items(
+    commands: list[ItemInfo],
+    skills: list[ItemInfo],
+    dry_run: bool = False,
+    progress_callback: Callable | None = None,
+) -> tuple[list[UninstallResult], list[UninstallResult]]:
+    """
+    Uninstall multiple commands and skills.
+
+    Args:
+        commands: List of commands to uninstall.
+        skills: List of skills to uninstall.
+        dry_run: Don't actually delete files.
+        progress_callback: Function to call after each item.
+
+    Returns:
+        Tuple of (command_results, skill_results).
+    """
+    command_results = []
+    for cmd in commands:
+        result = uninstall_command(cmd, dry_run)
+        command_results.append(result)
+        if progress_callback:
+            progress_callback(result)
+
+    skill_results = []
+    for skill in skills:
+        result = uninstall_skill(skill, dry_run)
+        skill_results.append(result)
+        if progress_callback:
+            progress_callback(result)
 
     return command_results, skill_results

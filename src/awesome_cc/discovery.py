@@ -177,3 +177,82 @@ def validate_names(
     valid = [n for n in requested if n in available_names]
     invalid = [n for n in requested if n not in available_names]
     return valid, invalid
+
+
+def discover_installed_commands(commands_dir: Path) -> list[ItemInfo]:
+    """
+    Discover installed commands in the target directory.
+
+    Args:
+        commands_dir: Directory where commands are installed (e.g., ~/.claude/commands).
+
+    Returns:
+        List of ItemInfo for each installed command.
+    """
+    if not commands_dir.exists():
+        return []
+
+    items = []
+    for md_file in sorted(commands_dir.glob("*.md")):
+        try:
+            content = md_file.read_text(encoding="utf-8")
+            frontmatter = parse_frontmatter(content)
+
+            name = frontmatter.get("name", md_file.stem)
+            description = frontmatter.get("description", "No description available")
+
+            items.append(
+                ItemInfo(
+                    name=name,
+                    description=description,
+                    path=md_file,
+                    item_type="command",
+                )
+            )
+        except Exception:
+            continue
+
+    return items
+
+
+def discover_installed_skills(skills_dir: Path) -> list[ItemInfo]:
+    """
+    Discover installed skills in the target directory.
+
+    Args:
+        skills_dir: Directory where skills are installed (e.g., ~/.claude/skills).
+
+    Returns:
+        List of ItemInfo for each installed skill.
+    """
+    if not skills_dir.exists():
+        return []
+
+    items = []
+    for skill_dir in sorted(skills_dir.iterdir()):
+        if not skill_dir.is_dir():
+            continue
+
+        skill_md = skill_dir / "SKILL.md"
+        if not skill_md.exists():
+            continue
+
+        try:
+            content = skill_md.read_text(encoding="utf-8")
+            frontmatter = parse_frontmatter(content)
+
+            name = frontmatter.get("name", skill_dir.name)
+            description = frontmatter.get("description", "No description available")
+
+            items.append(
+                ItemInfo(
+                    name=name,
+                    description=description,
+                    path=skill_dir,
+                    item_type="skill",
+                )
+            )
+        except Exception:
+            continue
+
+    return items

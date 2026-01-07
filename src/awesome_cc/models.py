@@ -26,3 +26,13 @@ class InstallResult:
     success: bool
     skipped: bool = False
     error: str | None = None
+
+
+@dataclass
+class UninstallResult:
+    """Result of an uninstall operation."""
+
+    name: str
+    success: bool
+    skipped: bool = False
+    error: str | None = None
