@@ -54,3 +54,5 @@ description: Brief description
 **Commands**: Add a new `.md` file in `commands/` with YAML frontmatter containing `name` and `description`.
 
 **Skills**: Create a new subdirectory in `skills/` with a `SKILL.md` file. Include any supporting scripts or resources in the same directory.
+
+**Important**: After adding new commands or skills, update `pyproject.toml` under `[tool.setuptools.data-files]` to include the new files. This ensures they are included when the package is installed via `uvx` or `pip`.
