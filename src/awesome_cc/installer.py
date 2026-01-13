@@ -22,17 +22,20 @@ def get_target_dirs(agent: str) -> tuple[Path, Path]:
     home = Path.home()
 
     if agent == "claude-code":
-        base = home / ".claude"
+        commands_dir = home / ".claude" / "commands"
+        skills_dir = home / ".claude" / "skills"
     elif agent == "codex":
-        base = home / ".codex"
+        commands_dir = home / ".codex" / "commands"
+        skills_dir = home / ".codex" / "skills"
     elif agent == "opencode":
-        base = home / ".opencode"
+        commands_dir = home / ".opencode" / "commands"
+        skills_dir = home / ".config" / "opencode" / "skill"
     else:
         raise ValueError(
             f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
         )
 
-    return base / "commands", base / "skills"
+    return commands_dir, skills_dir
 
 
 def ensure_target_dirs(commands_dir: Path, skills_dir: Path) -> None:
