@@ -14,6 +14,7 @@ A collection of slash commands and skills for Claude Code.
 ## Skills
 
 - `codex-review` - Review plans/code using Codex CLI
+- `opencode-docs` - OpenCode configuration and plugin ecosystem guide
 - `skill-creator` - Guide for creating Claude skills
 - `skill-share` - Create and share skills on Slack
 - `template-skill` - Template for new skills

@@ -64,6 +64,7 @@ include-package-data = true
     "skills/codex-review/scripts/review-code.sh",
     "skills/codex-review/scripts/review-plan.sh",
 ]
+"share/awesome-cc/skills/opencode-docs" = ["skills/opencode-docs/SKILL.md"]
 "share/awesome-cc/skills/skill-creator" = ["skills/skill-creator/SKILL.md", "skills/skill-creator/LICENSE.txt"]
 "share/awesome-cc/skills/skill-creator/scripts" = [
     "skills/skill-creator/scripts/init_skill.py",
