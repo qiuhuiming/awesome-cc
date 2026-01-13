@@ -14,7 +14,7 @@ def get_target_dirs(agent: str) -> tuple[Path, Path]:
     Get target directories for the given agent.
 
     Args:
-        agent: Agent name ('claude-code' or 'codex').
+        agent: Agent name ('claude-code', 'codex', or 'opencode').
 
     Returns:
         Tuple of (commands_dir, skills_dir).
@@ -25,8 +25,12 @@ def get_target_dirs(agent: str) -> tuple[Path, Path]:
         base = home / ".claude"
     elif agent == "codex":
         base = home / ".codex"
+    elif agent == "opencode":
+        base = home / ".opencode"
     else:
-        raise ValueError(f"Unknown agent: {agent}. Must be 'claude-code' or 'codex'.")
+        raise ValueError(
+            f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
+        )
 
     return base / "commands", base / "skills"
 

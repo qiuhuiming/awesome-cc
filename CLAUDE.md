@@ -14,6 +14,7 @@ uv run ace install --list                    # List available items
 uv run ace install --agent claude-code       # Interactive install
 uv run ace install --agent claude-code --all # Install all items
 uv run ace uninstall --agent claude-code     # Interactive uninstall
+uv run ace install --agent opencode --all    # Install all items for OpenCode
 ```
 
 ## Architecture
@@ -40,6 +41,7 @@ uv run ace uninstall --agent claude-code     # Interactive uninstall
 **Dual-agent support** - Installs to either:
 - Claude Code: `~/.claude/commands/` and `~/.claude/skills/`
 - Codex: `~/.codex/commands/` and `~/.codex/skills/`
+- OpenCode: `~/.opencode/commands/` and `~/.opencode/skills/`
 
 **Frontmatter format** for commands and skills:
 ```yaml

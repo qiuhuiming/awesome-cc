@@ -46,6 +46,9 @@ uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent clau
 
 # For Codex users
 uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent codex --all
+
+# For OpenCode users
+uvx --from git+https://github.com/qiuhuiming/awesome-cc ace install --agent opencode --all
 ```
 
 ## Manual Install

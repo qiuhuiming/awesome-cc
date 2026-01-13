@@ -1,5 +1,6 @@
 """CLI module for the installer."""
 
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
@@ -73,7 +74,7 @@ def install(
         typer.Option(
             "--agent",
             "-a",
-            help="Target agent: claude-code or codex",
+            help="Target agent: claude-code, codex, or opencode",
         ),
     ] = None,
     commands: Annotated[
@@ -145,7 +146,7 @@ def install(
         ),
     ] = False,
 ) -> None:
-    """Install commands and skills for Claude Code or Codex."""
+    """Install commands and skills for Claude Code, Codex, or OpenCode."""
     # Discover available items
     available_commands = discover_commands()
     available_skills = discover_skills()
@@ -157,27 +158,35 @@ def install(
 
     # Validate agent is provided for install operations
     if not agent:
-        show_error("--agent is required for installation. Use 'claude-code' or 'codex'.")
+        show_error(
+            "--agent is required for installation. Use 'claude-code', 'codex', or 'opencode'."
+        )
         raise typer.Exit(1)
 
     # Validate agent name
-    if agent not in ("claude-code", "codex"):
-        show_error(f"Unknown agent: {agent}. Must be 'claude-code' or 'codex'.")
+    if agent not in ("claude-code", "codex", "opencode"):
+        show_error(
+            f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
+        )
         raise typer.Exit(1)
 
     # Get target directories
     commands_dir, skills_dir = get_target_dirs(agent)
 
     # Validate mutually exclusive options
-    selector_count = sum([
-        bool(commands),
-        bool(skills),
-        commands_only,
-        skills_only,
-        all_items,
-    ])
+    selector_count = sum(
+        [
+            bool(commands),
+            bool(skills),
+            commands_only,
+            skills_only,
+            all_items,
+        ]
+    )
     if all_items and selector_count > 1:
-        show_error("--all cannot be combined with --commands, --skills, --commands-only, or --skills-only")
+        show_error(
+            "--all cannot be combined with --commands, --skills, --commands-only, or --skills-only"
+        )
         raise typer.Exit(1)
 
     # Determine which items to install
@@ -193,14 +202,18 @@ def install(
         if commands:
             valid, invalid = validate_names(commands, available_commands)
             if invalid:
-                show_invalid_names(invalid, "commands", [c.name for c in available_commands])
+                show_invalid_names(
+                    invalid, "commands", [c.name for c in available_commands]
+                )
                 raise typer.Exit(1)
             selected_commands = valid
 
         if skills:
             valid, invalid = validate_names(skills, available_skills)
             if invalid:
-                show_invalid_names(invalid, "skills", [s.name for s in available_skills])
+                show_invalid_names(
+                    invalid, "skills", [s.name for s in available_skills]
+                )
                 raise typer.Exit(1)
             selected_skills = valid
     else:
@@ -228,14 +241,12 @@ def install(
 
     # Get item objects
     commands_to_install = [
-        get_item_by_name(available_commands, name)
-        for name in selected_commands
+        get_item_by_name(available_commands, name) for name in selected_commands
     ]
     commands_to_install = [c for c in commands_to_install if c is not None]
 
     skills_to_install = [
-        get_item_by_name(available_skills, name)
-        for name in selected_skills
+        get_item_by_name(available_skills, name) for name in selected_skills
     ]
     skills_to_install = [s for s in skills_to_install if s is not None]
 
@@ -245,7 +256,7 @@ def install(
 
     console.print("\nInstalling...")
 
-    def progress_callback(result: InstallResult, target: str) -> None:
+    def progress_callback(result: InstallResult, target: Path) -> None:
         show_install_progress(result.name, target, result.success, result.skipped)
 
     def overwrite_callback(name: str) -> bool:
@@ -280,7 +291,7 @@ def uninstall(
         typer.Option(
             "--agent",
             "-a",
-            help="Target agent: claude-code or codex",
+            help="Target agent: claude-code, codex, or opencode",
         ),
     ] = None,
     commands: Annotated[
@@ -344,15 +355,17 @@ def uninstall(
         ),
     ] = False,
 ) -> None:
-    """Uninstall commands and skills from Claude Code or Codex."""
+    """Uninstall commands and skills from Claude Code, Codex, or OpenCode."""
     # Validate agent is provided
     if not agent:
-        show_error("--agent is required. Use 'claude-code' or 'codex'.")
+        show_error("--agent is required. Use 'claude-code', 'codex', or 'opencode'.")
         raise typer.Exit(1)
 
     # Validate agent name
-    if agent not in ("claude-code", "codex"):
-        show_error(f"Unknown agent: {agent}. Must be 'claude-code' or 'codex'.")
+    if agent not in ("claude-code", "codex", "opencode"):
+        show_error(
+            f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
+        )
         raise typer.Exit(1)
 
     # Get target directories
@@ -368,15 +381,19 @@ def uninstall(
         raise typer.Exit()
 
     # Validate mutually exclusive options
-    selector_count = sum([
-        bool(commands),
-        bool(skills),
-        commands_only,
-        skills_only,
-        all_items,
-    ])
+    selector_count = sum(
+        [
+            bool(commands),
+            bool(skills),
+            commands_only,
+            skills_only,
+            all_items,
+        ]
+    )
     if all_items and selector_count > 1:
-        show_error("--all cannot be combined with --commands, --skills, --commands-only, or --skills-only")
+        show_error(
+            "--all cannot be combined with --commands, --skills, --commands-only, or --skills-only"
+        )
         raise typer.Exit(1)
 
     # Determine which items to uninstall
@@ -392,14 +409,18 @@ def uninstall(
         if commands:
             valid, invalid = validate_names(commands, installed_commands)
             if invalid:
-                show_invalid_names(invalid, "commands", [c.name for c in installed_commands])
+                show_invalid_names(
+                    invalid, "commands", [c.name for c in installed_commands]
+                )
                 raise typer.Exit(1)
             selected_commands = valid
 
         if skills:
             valid, invalid = validate_names(skills, installed_skills)
             if invalid:
-                show_invalid_names(invalid, "skills", [s.name for s in installed_skills])
+                show_invalid_names(
+                    invalid, "skills", [s.name for s in installed_skills]
+                )
                 raise typer.Exit(1)
             selected_skills = valid
     else:
@@ -413,10 +434,14 @@ def uninstall(
             raise typer.Exit()
 
         if not skills_only:
-            selected_commands = interactive_select(installed_commands, "commands to uninstall")
+            selected_commands = interactive_select(
+                installed_commands, "commands to uninstall"
+            )
 
         if not commands_only:
-            selected_skills = interactive_select(installed_skills, "skills to uninstall")
+            selected_skills = interactive_select(
+                installed_skills, "skills to uninstall"
+            )
 
     # Nothing to uninstall?
     if not selected_commands and not selected_skills:
@@ -433,14 +458,12 @@ def uninstall(
 
     # Get item objects
     commands_to_uninstall = [
-        get_item_by_name(installed_commands, name)
-        for name in selected_commands
+        get_item_by_name(installed_commands, name) for name in selected_commands
     ]
     commands_to_uninstall = [c for c in commands_to_uninstall if c is not None]
 
     skills_to_uninstall = [
-        get_item_by_name(installed_skills, name)
-        for name in selected_skills
+        get_item_by_name(installed_skills, name) for name in selected_skills
     ]
     skills_to_uninstall = [s for s in skills_to_uninstall if s is not None]
 
