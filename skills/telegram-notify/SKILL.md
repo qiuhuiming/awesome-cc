@@ -19,8 +19,19 @@ Send notifications to the user's Telegram when tasks complete, fail, or need inp
 
 ## How to Notify
 
+Claude Code:
 ```bash
 uv run ~/.claude/skills/telegram-notify/telegram-notify.py \
+  --status success \
+  --summary "Implemented user authentication with JWT. Created PR #42." \
+  --todo "Review src/auth/ changes" \
+  --todo "Run tests locally" \
+  --todo "Merge when ready"
+```
+
+Codex (default `CODEX_HOME=~/.codex`):
+```bash
+uv run ~/.codex/skills/telegram-notify/telegram-notify.py \
   --status success \
   --summary "Implemented user authentication with JWT. Created PR #42." \
   --todo "Review src/auth/ changes" \
@@ -92,7 +103,7 @@ The script automatically detects and includes:
 - **Agent**: Claude Code or Codex
 - **Working directory**: Current project path
 - **Git branch**: Current branch name
-- **Session ID**: Claude Code session (first 8 chars)
+- **Session ID**: Claude Code session (first 8 chars); Codex not detected yet (use `--session`)
 
 You can override these with `--pwd`, `--branch`, `--session` if needed.
 
@@ -110,6 +121,8 @@ Common issues:
 - Rate limiting (script auto-retries with backoff)
 
 ## Examples
+
+Note: Use `~/.claude/...` for Claude Code or `~/.codex/...` (or `$CODEX_HOME`) for Codex.
 
 ### Successful completion
 
