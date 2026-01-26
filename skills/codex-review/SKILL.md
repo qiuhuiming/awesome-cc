@@ -15,6 +15,16 @@ Use this skill when:
 - Reviewing code changes (uncommitted, against base branch, or specific commits)
 - Reviewing specific files for quality, security, or other criteria
 
+## Invocation Guidelines
+
+**IMPORTANT: Never change to this skill's directory.** Stay in the user's current working directory and invoke scripts using their absolute path:
+
+```bash
+"$HOME/.claude/skills/codex-review/scripts/<script-name>.sh" [args]
+```
+
+This ensures the scripts operate on files in the user's project, not the skill directory.
+
 ## Review Types
 
 ### 1. Plan Review
@@ -22,19 +32,19 @@ Use this skill when:
 To review an implementation plan or any content (works outside git repos):
 
 ```bash
-./scripts/review-plan.sh <plan-file-or-content> [custom-prompt]
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" <plan-file-or-content> [custom-prompt]
 ```
 
 **Examples:**
 ```bash
 # Review a plan file
-./scripts/review-plan.sh /path/to/plan.md
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" /path/to/plan.md
 
 # Review with custom focus
-./scripts/review-plan.sh /path/to/plan.md "Focus on security implications and scalability"
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" /path/to/plan.md "Focus on security implications and scalability"
 
 # Review inline content
-./scripts/review-plan.sh "$(cat <<'EOF'
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" "$(cat <<'EOF'
 # My Plan
 1. Step one
 2. Step two
@@ -47,7 +57,7 @@ EOF
 To review code changes in a git repository:
 
 ```bash
-./scripts/review-code.sh [mode] [options] [prompt]
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" [mode] [options] [prompt]
 ```
 
 **Modes:**
@@ -62,16 +72,16 @@ To review code changes in a git repository:
 **Examples:**
 ```bash
 # Review uncommitted changes
-./scripts/review-code.sh --uncommitted
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --uncommitted
 
 # Review against auto-detected base branch
-./scripts/review-code.sh
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh"
 
 # Review against specific branch
-./scripts/review-code.sh --base main
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --base main
 
 # Review a specific commit
-./scripts/review-code.sh --commit abc1234
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --commit abc1234
 ```
 
 > **Note:** Custom prompts are not supported with `--uncommitted`, `--base`, or `--commit` flags.
