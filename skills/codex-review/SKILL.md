@@ -82,7 +82,10 @@ $(cat path/to/file1 path/to/file2)"
 
 Review a diff directly:
 ```bash
-git diff HEAD~1 | codex exec "Review this diff for regressions and missing tests."
+DIFF=$(git diff HEAD~1)
+codex exec "Review this diff for regressions and missing tests.
+
+$DIFF"
 ```
 
 ## Prompt Guidelines
@@ -124,5 +127,5 @@ Always format the final review output with this structure:
 ## Notes
 
 - Scripts handle git repo checks and base branch discovery.
-- `codex review` accepts options and custom prompt input.
+- `codex review` mode flags (`--uncommitted`, `--base`, `--commit`) cannot be combined with custom prompts; the script falls back to `codex exec` when both are needed.
 - For long prompts, scripts pass prompt content through stdin to avoid shell escaping and length issues.

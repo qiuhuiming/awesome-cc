@@ -110,32 +110,72 @@ if [ "$MODE" = "commit" ]; then
     fi
 fi
 
-declare -a args
-args=(review)
-
-case "$MODE" in
-    uncommitted)
-        args+=(--uncommitted)
-        ;;
-    base)
-        args+=(--base "$BASE")
-        ;;
-    commit)
-        args+=(--commit "$COMMIT_SHA")
-        ;;
-    auto)
-        BASE="$("$SCRIPT_DIR/detect-base-branch.sh")"
-        args+=(--base "$BASE")
-        ;;
-esac
-
-if [ -n "$TITLE" ]; then
-    args+=(--title "$TITLE")
+# Auto-detect base branch if needed.
+if [ "$MODE" = "auto" ]; then
+    BASE="$("$SCRIPT_DIR/detect-base-branch.sh")"
 fi
 
 if [ -n "$PROMPT_TEXT" ]; then
-    # Use stdin to avoid shell quoting issues for long prompts.
-    printf '%s\n' "$PROMPT_TEXT" | codex "${args[@]}" -
+    # codex review mode flags (--uncommitted, --base, --commit) cannot be
+    # combined with a positional [PROMPT] argument.  Fall back to codex exec
+    # with the diff embedded in the prompt.
+
+    # Generate diff based on mode.
+    case "$MODE" in
+        uncommitted)
+            DIFF="$(git diff HEAD; git diff --cached)"
+            # Include untracked files.
+            while IFS= read -r f; do
+                [ -n "$f" ] || continue
+                DIFF="$DIFF
+--- /dev/null
++++ b/$f
+$(sed 's/^/+/' "$f")"
+            done < <(git ls-files --others --exclude-standard)
+            ;;
+        base|auto)
+            DIFF="$(git diff "${BASE}...HEAD")"
+            ;;
+        commit)
+            DIFF="$(git show "$COMMIT_SHA")"
+            ;;
+    esac
+
+    # Compose the full prompt.
+    FULL_PROMPT="Review the following code changes."
+    if [ -n "$TITLE" ]; then
+        FULL_PROMPT="$FULL_PROMPT
+
+Title: $TITLE"
+    fi
+    FULL_PROMPT="$FULL_PROMPT
+
+Instructions: $PROMPT_TEXT
+
+Diff:
+$DIFF"
+
+    printf '%s\n' "$FULL_PROMPT" | codex exec -
 else
+    # No custom prompt — use codex review directly.
+    declare -a args
+    args=(review)
+
+    case "$MODE" in
+        uncommitted)
+            args+=(--uncommitted)
+            ;;
+        base|auto)
+            args+=(--base "$BASE")
+            ;;
+        commit)
+            args+=(--commit "$COMMIT_SHA")
+            ;;
+    esac
+
+    if [ -n "$TITLE" ]; then
+        args+=(--title "$TITLE")
+    fi
+
     codex "${args[@]}"
 fi
