@@ -1,23 +1,31 @@
 ---
 name: codex-review
-description: This skill should be used when the user explicitly wants to review plans, implemented code, or other content using Codex. It invokes the codex CLI in non-interactive mode with solid prompts containing clear background and context.
+description: Use this skill only when the user explicitly asks to use Codex (for example mentions "codex", "codex review", or "use codex") to review implementation plans, code changes, commits, or specific files. Do not trigger for generic review requests that do not explicitly ask for Codex.
 ---
 
 # Codex Review Skill
 
-This skill leverages the Codex CLI to perform reviews of plans, code changes, or other content in non-interactive mode.
+Use Codex CLI in non-interactive mode to review plans and code with clear scope and reproducible output.
 
-## When to Use
+## Trigger Policy (Strict)
 
-Use this skill when:
-- User explicitly requests a review using codex (e.g., "use codex to review this", "codex review my code")
-- Reviewing implementation plans before execution
-- Reviewing code changes (uncommitted, against base branch, or specific commits)
-- Reviewing specific files for quality, security, or other criteria
+Trigger this skill only when the user explicitly asks for Codex.
+
+Trigger examples:
+- "use codex to review this"
+- "codex review my PR"
+- "用 codex 看一下这个提交"
+
+Do not trigger examples:
+- "review my code"
+- "帮我审一下这个方案"
+- "can you do a quick PR review"
+
+If the request is a review task but Codex is not explicitly requested, use normal review behavior instead of this skill.
 
 ## Invocation Guidelines
 
-**IMPORTANT: Never change to this skill's directory.** Stay in the user's current working directory and invoke scripts using their absolute path:
+IMPORTANT: Never change to this skill's directory. Stay in the user's current working directory and invoke scripts using their absolute path:
 
 ```bash
 "$HOME/.claude/skills/codex-review/scripts/<script-name>.sh" [args]
@@ -27,112 +35,94 @@ This ensures the scripts operate on files in the user's project, not the skill d
 
 ## Review Types
 
-### 1. Plan Review
-
-To review an implementation plan or any content (works outside git repos):
+### 1. Plan Review (works outside git repos)
 
 ```bash
-"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" <plan-file-or-content> [custom-prompt]
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" [--file <path> | --content <text>] [--prompt <text> | --prompt-file <file>]
+cat plan.md | "$HOME/.claude/skills/codex-review/scripts/review-plan.sh" [--prompt <text> | --prompt-file <file>]
 ```
 
-**Examples:**
+Examples:
 ```bash
-# Review a plan file
-"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" /path/to/plan.md
-
-# Review with custom focus
-"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" /path/to/plan.md "Focus on security implications and scalability"
-
-# Review inline content
-"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" "$(cat <<'EOF'
-# My Plan
-1. Step one
-2. Step two
-EOF
-)"
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" --file /path/to/plan.md
+"$HOME/.claude/skills/codex-review/scripts/review-plan.sh" --file /path/to/plan.md --prompt "Focus on security and rollout risks"
+cat /path/to/plan.md | "$HOME/.claude/skills/codex-review/scripts/review-plan.sh" --prompt-file /path/to/focus.txt
 ```
 
-### 2. Code Review
-
-To review code changes in a git repository:
+### 2. Code Review (git repositories)
 
 ```bash
-"$HOME/.claude/skills/codex-review/scripts/review-code.sh" [mode] [options] [prompt]
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" [--uncommitted | --base <branch> | --commit <sha>] [--prompt <text> | --prompt-file <file>] [--title <text>]
 ```
 
-**Modes:**
+Modes:
+- `--uncommitted`: review staged, unstaged, and untracked changes
+- `--base <branch>`: review changes against a branch
+- `--commit <sha>`: review changes introduced by one commit
+- default: auto-detect base branch and review against it
 
-| Mode | Description |
-|------|-------------|
-| `--uncommitted` | Review staged, unstaged, and untracked changes |
-| `--base <branch>` | Review changes against a specific base branch |
-| `--commit <sha>` | Review changes from a specific commit |
-| *(default)* | Auto-detect base branch and review against it |
-
-**Examples:**
+Examples:
 ```bash
-# Review uncommitted changes
 "$HOME/.claude/skills/codex-review/scripts/review-code.sh" --uncommitted
-
-# Review against auto-detected base branch
 "$HOME/.claude/skills/codex-review/scripts/review-code.sh"
-
-# Review against specific branch
-"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --base main
-
-# Review a specific commit
-"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --commit abc1234
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --base main --prompt "Focus on API compatibility"
+"$HOME/.claude/skills/codex-review/scripts/review-code.sh" --commit abc1234 --title "Auth hotfix review"
 ```
-
-> **Note:** Custom prompts are not supported with `--uncommitted`, `--base`, or `--commit` flags.
-> This is a limitation of the `codex review` CLI. Use `codex review "custom prompt"` (no flags) for custom prompts.
 
 ### 3. Direct Codex Commands
 
-For more control, invoke codex directly:
+Use direct commands when script behavior is insufficient.
 
-**Review specific files:**
+Review selected files:
 ```bash
-codex exec --skip-git-repo-check "Review the following files for [CRITERIA]:
+codex exec --skip-git-repo-check "Review these files for correctness, security, and maintainability.
 
-Files: [FILE_PATHS]
-
-Context: [BACKGROUND]
-
-$(cat file1.py file2.py)"
+$(cat path/to/file1 path/to/file2)"
 ```
 
-**Review git diff directly:**
+Review a diff directly:
 ```bash
-codex exec "Review this diff for potential issues:
-
-$(git diff HEAD~1)"
+git diff HEAD~1 | codex exec "Review this diff for regressions and missing tests."
 ```
 
-## Prompt Construction Guidelines
+## Prompt Guidelines
 
-When constructing prompts for codex, always include:
+Include:
+1. Context: what is being reviewed and why
+2. Focus: exact review dimensions (correctness, security, performance, etc.)
+3. Scope: exact files / commit / diff range
+4. Constraints: compatibility or rollout constraints
 
-1. **Clear background context** - What is being reviewed and why
-2. **Specific focus areas** - What aspects to analyze (security, performance, correctness, etc.)
-3. **Full content** - For plans, include the entire plan content
-4. **Relevant code** - For code reviews, specify files or use appropriate flags
+Prefer scoped prompts over whole-repo prompts to reduce noise.
 
-**Example prompt structure:**
+## Review Report Structure
+
+Always format the final review output with this structure:
+
+```markdown
+## Summary
+- What was reviewed
+- Overall risk level
+
+## Findings
+- [Severity] path/to/file:line - issue description, impact, why it matters
+
+## Risks / Unknowns
+- Missing context or checks required before merge
+
+## Recommended Fixes
+- Concrete, prioritized next steps
 ```
-Review the following [TYPE] for [PROJECT/CONTEXT].
 
-Focus on:
-- [Aspect 1]
-- [Aspect 2]
-- [Aspect 3]
+## Safety and Scope
 
-[CONTENT]
-```
+- Review only requested scope; do not pull unrelated files.
+- Avoid including secrets, env files, or large generated artifacts in prompts.
+- If secret-like content is detected, warn and ask to sanitize scope.
+- For large diffs, split review by area to keep findings precise.
 
 ## Notes
 
-- Scripts automatically handle git repo detection and base branch discovery
-- Non-git directories are supported for plan reviews via `--skip-git-repo-check`
-- Default prompts are provided but can be customized for specific needs
-- Output is displayed directly in terminal (no file saving)
+- Scripts handle git repo checks and base branch discovery.
+- `codex review` accepts options and custom prompt input.
+- For long prompts, scripts pass prompt content through stdin to avoid shell escaping and length issues.
