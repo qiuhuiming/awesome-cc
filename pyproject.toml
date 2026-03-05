@@ -48,31 +48,22 @@ where = ["src"]
 [tool.setuptools]
 include-package-data = true
 
-# Include commands and skills directories in the distribution
+# Include skills directories in the distribution
 [tool.setuptools.data-files]
-"share/awesome-cc/commands" = [
-    "commands/ask-mode.md",
-    "commands/code-review.md",
-    "commands/commit.md",
-    "commands/make-command.md",
-    "commands/proactive-ask.md",
-    "commands/prompt-engineer.md",
-]
-"share/awesome-cc/skills/codex-review" = ["skills/codex-review/SKILL.md"]
-"share/awesome-cc/skills/codex-review/scripts" = [
-    "skills/codex-review/scripts/detect-base-branch.sh",
-    "skills/codex-review/scripts/review-code.sh",
-    "skills/codex-review/scripts/review-plan.sh",
-]
-"share/awesome-cc/skills/opencode-docs" = ["skills/opencode-docs/SKILL.md"]
+"share/awesome-cc/skills/codex-exec" = ["skills/codex-exec/SKILL.md"]
+"share/awesome-cc/skills/dao-mode" = ["skills/dao-mode/SKILL.md"]
+"share/awesome-cc/skills/notebooklm" = ["skills/notebooklm/SKILL.md"]
 "share/awesome-cc/skills/skill-creator" = ["skills/skill-creator/SKILL.md", "skills/skill-creator/LICENSE.txt"]
 "share/awesome-cc/skills/skill-creator/scripts" = [
     "skills/skill-creator/scripts/init_skill.py",
     "skills/skill-creator/scripts/package_skill.py",
     "skills/skill-creator/scripts/quick_validate.py",
 ]
-"share/awesome-cc/skills/skill-share" = ["skills/skill-share/SKILL.md"]
-"share/awesome-cc/skills/template-skill" = ["skills/template-skill/SKILL.md"]
+"share/awesome-cc/skills/telegram-notify" = [
+    "skills/telegram-notify/SKILL.md",
+    "skills/telegram-notify/README.md",
+    "skills/telegram-notify/telegram-notify.py",
+]
 "share/awesome-cc/skills/uv" = ["skills/uv/SKILL.md"]
 "share/awesome-cc/skills/uv/references" = [
     "skills/uv/references/cli_reference.md",
@@ -86,10 +77,4 @@ include-package-data = true
 ]
 "share/awesome-cc/skills/uv/assets/script_examples" = [
     "skills/uv/assets/script_examples/data_analysis.py",
-]
-"share/awesome-cc/skills/dao-mode" = ["skills/dao-mode/SKILL.md"]
-"share/awesome-cc/skills/telegram-notify" = [
-    "skills/telegram-notify/SKILL.md",
-    "skills/telegram-notify/README.md",
-    "skills/telegram-notify/telegram-notify.py",
 ]
