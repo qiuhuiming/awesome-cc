@@ -1,6 +1,6 @@
 ---
 name: codex-exec
-description: Use when the user wants to leverage the codex CLI to perform tasks such as code review, security audit, analysis, fixes, test generation, or any other coding task. Drives codex in headless full-auto mode with well-structured prompts.
+description: Use when the user wants to leverage the codex CLI to perform tasks such as code review, security audit, analysis, fixes, test generation, or any other coding task. Drives codex in headless mode with well-structured prompts.
 ---
 
 # Codex Exec Skill
@@ -10,10 +10,9 @@ Drive the `codex` CLI in headless mode to perform any coding task — review, an
 ## Core Command
 
 ```bash
-codex exec -a full-auto [--output-last-message <file>] "<prompt>"
+codex exec [--output-last-message <file>] "<prompt>"
 ```
 
-- Always use `-a full-auto` (no interactive confirmation)
 - No `-s` sandbox flag — constraints are enforced at the prompt level
 - Run from the user's current working directory (never `cd` into this skill's directory)
 
@@ -57,7 +56,7 @@ OUTPUT FORMAT: YAML
 ### Code Review (against base branch)
 
 ```bash
-codex exec -a full-auto --output-last-message /tmp/review-result.yaml "
+codex exec --output-last-message /tmp/review-result.yaml "
 ROLE: Senior code reviewer
 
 CONSTRAINTS:
@@ -82,7 +81,7 @@ OUTPUT FORMAT: YAML
 ### Security Audit
 
 ```bash
-codex exec -a full-auto --output-last-message /tmp/security-audit.yaml "
+codex exec --output-last-message /tmp/security-audit.yaml "
 ROLE: Application security engineer
 
 CONSTRAINTS:
@@ -107,7 +106,7 @@ OUTPUT FORMAT: YAML
 ### Fix Lint Errors
 
 ```bash
-codex exec -a full-auto "
+codex exec "
 ROLE: Code quality engineer
 
 CONSTRAINTS:
@@ -132,7 +131,7 @@ Note: No `--output-last-message` here because codex modifies files and we need t
 ### Generate Tests
 
 ```bash
-codex exec -a full-auto --output-last-message /tmp/test-gen-result.yaml "
+codex exec --output-last-message /tmp/test-gen-result.yaml "
 ROLE: Test engineer
 
 CONSTRAINTS:
