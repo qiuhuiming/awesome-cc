@@ -87,6 +87,7 @@ include-package-data = true
 "share/awesome-cc/skills/uv/assets/script_examples" = [
     "skills/uv/assets/script_examples/data_analysis.py",
 ]
+"share/awesome-cc/skills/dao-mode" = ["skills/dao-mode/SKILL.md"]
 "share/awesome-cc/skills/telegram-notify" = [
     "skills/telegram-notify/SKILL.md",
     "skills/telegram-notify/README.md",
