@@ -13,6 +13,7 @@ A collection of slash commands and skills for Claude Code.
 
 ## Skills
 
+- `codex-exec` - Drive codex CLI in headless mode for code review, security audit, fixes, and more
 - `codex-review` - Review plans/code using Codex CLI
 - `opencode-docs` - OpenCode configuration and plugin ecosystem guide
 - `skill-creator` - Guide for creating Claude skills
