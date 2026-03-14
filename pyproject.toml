@@ -64,6 +64,8 @@ include-package-data = true
     "skills/telegram-notify/README.md",
     "skills/telegram-notify/telegram-notify.py",
 ]
+"share/awesome-cc/skills/orchestrate" = ["skills/orchestrate/SKILL.md"]
+"share/awesome-cc/skills/orchestrate/references" = ["skills/orchestrate/references/subagent-prompt-template.md"]
 "share/awesome-cc/skills/uv" = ["skills/uv/SKILL.md"]
 "share/awesome-cc/skills/uv/references" = [
     "skills/uv/references/cli_reference.md",
