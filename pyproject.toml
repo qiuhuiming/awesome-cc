@@ -54,7 +54,7 @@ include-package-data = true
 "share/awesome-cc/skills/dao-mode" = ["skills/dao-mode/SKILL.md"]
 "share/awesome-cc/skills/notebooklm" = ["skills/notebooklm/SKILL.md"]
 "share/awesome-cc/skills/orchestrate" = ["skills/orchestrate/SKILL.md"]
-"share/awesome-cc/skills/orchestrate/references" = ["skills/orchestrate/references/subagent-prompt-template.md"]
+"share/awesome-cc/skills/orchestrate/references" = ["skills/orchestrate/references/teammate-prompt-template.md"]
 "share/awesome-cc/skills/skill-creator" = [
     "skills/skill-creator/LICENSE.txt",
     "skills/skill-creator/SKILL.md",
