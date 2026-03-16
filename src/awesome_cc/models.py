@@ -2,35 +2,23 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
 
 
 @dataclass
 class ItemInfo:
-    """Information about a command or skill."""
+    """Information about a skill."""
 
     name: str
     description: str
     path: Path
-    item_type: Literal["command", "skill"]
 
     def __str__(self) -> str:
         return f"{self.name} - {self.description}"
 
 
 @dataclass
-class InstallResult:
-    """Result of an installation operation."""
-
-    name: str
-    success: bool
-    skipped: bool = False
-    error: str | None = None
-
-
-@dataclass
-class UninstallResult:
-    """Result of an uninstall operation."""
+class OperationResult:
+    """Result of an install or uninstall operation."""
 
     name: str
     success: bool
