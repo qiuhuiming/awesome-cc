@@ -1,6 +1,5 @@
 """CLI module for the installer."""
 
-from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
@@ -8,36 +7,26 @@ from rich.console import Console
 
 from . import __version__
 from .discovery import (
-    discover_commands,
-    discover_installed_commands,
     discover_installed_skills,
     discover_skills,
-    get_item_by_name,
     validate_names,
 )
-from .installer import get_target_dirs, install_items, uninstall_items
-from .models import InstallResult, UninstallResult
+from .installer import VALID_AGENTS, get_skills_dir, install_skills, uninstall_skills
 from .ui import (
-    confirm_install,
     confirm_overwrite,
-    confirm_uninstall,
-    interactive_select,
+    interactive_select_agents,
+    interactive_select_skills,
     show_completion,
     show_error,
-    show_header,
-    show_install_progress,
     show_installed_list,
     show_invalid_names,
     show_list,
-    show_summary,
-    show_uninstall_completion,
-    show_uninstall_progress,
-    show_uninstall_summary,
+    show_progress,
 )
 
 app = typer.Typer(
     name="ace",
-    help="Awesome Claude Extensions - CLI installer for Claude Code skills and commands.",
+    help="Awesome Claude Extensions - CLI installer for Claude Code skills.",
     no_args_is_help=True,
 )
 console = Console()
@@ -67,22 +56,28 @@ def main(
     pass
 
 
+def validate_agents(agents: list[str]) -> None:
+    """Validate agent names, exit on invalid."""
+    for agent in agents:
+        if agent not in VALID_AGENTS:
+            show_error(f"Unknown agent: {agent}. Must be one of: {', '.join(VALID_AGENTS)}")
+            raise typer.Exit(1)
+
+
+def resolve_skills(names: list[str], available: list) -> list:
+    """Convert skill names to ItemInfo objects."""
+    items_by_name = {item.name: item for item in available}
+    return [items_by_name[n] for n in names if n in items_by_name]
+
+
 @app.command()
 def install(
     agent: Annotated[
-        Optional[str],
+        Optional[list[str]],
         typer.Option(
             "--agent",
             "-a",
-            help="Target agent: claude-code, codex, or opencode",
-        ),
-    ] = None,
-    commands: Annotated[
-        Optional[list[str]],
-        typer.Option(
-            "--commands",
-            "-c",
-            help="Install specific commands by name",
+            help="Target agent (repeatable): claude-code, codex, or opencode",
         ),
     ] = None,
     skills: Annotated[
@@ -93,25 +88,11 @@ def install(
             help="Install specific skills by name",
         ),
     ] = None,
-    commands_only: Annotated[
-        bool,
-        typer.Option(
-            "--commands-only",
-            help="Interactive mode: only prompt for commands",
-        ),
-    ] = False,
-    skills_only: Annotated[
-        bool,
-        typer.Option(
-            "--skills-only",
-            help="Interactive mode: only prompt for skills",
-        ),
-    ] = False,
     all_items: Annotated[
         bool,
         typer.Option(
             "--all",
-            help="Install all commands and skills",
+            help="Install all skills",
         ),
     ] = False,
     list_items: Annotated[
@@ -119,7 +100,7 @@ def install(
         typer.Option(
             "--list",
             "-l",
-            help="List available commands and skills",
+            help="List available skills",
         ),
     ] = False,
     dry_run: Annotated[
@@ -134,7 +115,7 @@ def install(
         typer.Option(
             "--yes",
             "-y",
-            help="Auto-confirm all prompts",
+            help="Auto-confirm overwrite prompts",
         ),
     ] = False,
     force: Annotated[
@@ -146,160 +127,86 @@ def install(
         ),
     ] = False,
 ) -> None:
-    """Install commands and skills for Claude Code, Codex, or OpenCode."""
-    # Discover available items
-    available_commands = discover_commands()
+    """Install skills for Claude Code, Codex, or OpenCode."""
     available_skills = discover_skills()
 
-    # Handle --list (doesn't require --agent)
+    # --list: no agent required
     if list_items:
-        show_list(available_commands, available_skills)
+        show_list(available_skills)
         raise typer.Exit()
 
-    # Validate agent is provided for install operations
-    if not agent:
-        show_error(
-            "--agent is required for installation. Use 'claude-code', 'codex', or 'opencode'."
-        )
-        raise typer.Exit(1)
+    # Resolve agents
+    agents = list(agent) if agent else []
+    if agents:
+        validate_agents(agents)
 
-    # Validate agent name
-    if agent not in ("claude-code", "codex", "opencode"):
-        show_error(
-            f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
-        )
-        raise typer.Exit(1)
+    # Determine what needs interactive prompts
+    need_agent_prompt = not agents
+    need_skills_prompt = not skills and not all_items
 
-    # Get target directories
-    commands_dir, skills_dir = get_target_dirs(agent)
+    # Interactive agent selection
+    if need_agent_prompt:
+        agents = interactive_select_agents()
+        if not agents:
+            console.print("[yellow]No agents selected.[/yellow]")
+            raise typer.Exit()
 
-    # Validate mutually exclusive options
-    selector_count = sum(
-        [
-            bool(commands),
-            bool(skills),
-            commands_only,
-            skills_only,
-            all_items,
-        ]
-    )
-    if all_items and selector_count > 1:
-        show_error(
-            "--all cannot be combined with --commands, --skills, --commands-only, or --skills-only"
-        )
-        raise typer.Exit(1)
-
-    # Determine which items to install
-    selected_commands: list[str] = []
-    selected_skills: list[str] = []
-
+    # Determine selected skills
     if all_items:
-        # Install all
-        selected_commands = [c.name for c in available_commands]
-        selected_skills = [s.name for s in available_skills]
-    elif commands or skills:
-        # Direct specification mode
-        if commands:
-            valid, invalid = validate_names(commands, available_commands)
-            if invalid:
-                show_invalid_names(
-                    invalid, "commands", [c.name for c in available_commands]
-                )
-                raise typer.Exit(1)
-            selected_commands = valid
-
-        if skills:
-            valid, invalid = validate_names(skills, available_skills)
-            if invalid:
-                show_invalid_names(
-                    invalid, "skills", [s.name for s in available_skills]
-                )
-                raise typer.Exit(1)
-            selected_skills = valid
+        selected_names = [s.name for s in available_skills]
+    elif skills:
+        valid, invalid = validate_names(skills, available_skills)
+        if invalid:
+            show_invalid_names(invalid, [s.name for s in available_skills])
+            raise typer.Exit(1)
+        selected_names = valid
+    elif need_skills_prompt:
+        selected_names = interactive_select_skills(available_skills, action="install")
     else:
-        # Interactive mode
-        show_header(agent, commands_dir, skills_dir)
+        selected_names = []
 
-        if not skills_only:
-            selected_commands = interactive_select(available_commands, "commands")
-
-        if not commands_only:
-            selected_skills = interactive_select(available_skills, "skills")
-
-    # Nothing to install?
-    if not selected_commands and not selected_skills:
+    if not selected_names:
         console.print("[yellow]Nothing to install.[/yellow]")
         raise typer.Exit()
 
-    # Show summary
-    show_summary(selected_commands, selected_skills, commands_dir, skills_dir)
+    skills_to_install = resolve_skills(selected_names, available_skills)
 
-    # Confirm installation
-    if not confirm_install(auto_yes=yes):
-        console.print("[yellow]Installation cancelled.[/yellow]")
-        raise typer.Exit()
-
-    # Get item objects
-    commands_to_install = [
-        get_item_by_name(available_commands, name) for name in selected_commands
-    ]
-    commands_to_install = [c for c in commands_to_install if c is not None]
-
-    skills_to_install = [
-        get_item_by_name(available_skills, name) for name in selected_skills
-    ]
-    skills_to_install = [s for s in skills_to_install if s is not None]
-
-    # Install
     if dry_run:
         console.print("[cyan]Dry run - no files will be copied:[/cyan]")
 
-    console.print("\nInstalling...")
-
-    def progress_callback(result: InstallResult, target: Path) -> None:
-        show_install_progress(result.name, target, result.success, result.skipped)
-
-    def overwrite_callback(name: str) -> bool:
-        # If --yes is passed, auto-confirm overwrites
+    # Overwrite callback
+    def overwrite_cb(name: str) -> bool:
         if yes:
             return True
-        return confirm_overwrite(name, force=False)
+        return confirm_overwrite(name)
 
-    command_results, skill_results = install_items(
-        commands=commands_to_install,
-        skills=skills_to_install,
-        commands_dir=commands_dir,
-        skills_dir=skills_dir,
-        force=force,
-        dry_run=dry_run,
-        confirm_callback=overwrite_callback if not (force or yes) else None,
-        progress_callback=progress_callback,
-    )
+    # Install to each agent
+    total_installed = 0
+    for ag in agents:
+        skills_dir = get_skills_dir(ag)
+        console.print(f"\nInstalling to [bold]{ag}[/bold] ({skills_dir})...")
 
-    # Count results
-    commands_installed = sum(1 for r in command_results if r.success and not r.skipped)
-    skills_installed = sum(1 for r in skill_results if r.success and not r.skipped)
+        results = install_skills(
+            skills=skills_to_install,
+            skills_dir=skills_dir,
+            force=force,
+            dry_run=dry_run,
+            confirm_callback=overwrite_cb if not (force or yes) else None,
+            progress_callback=lambda r: show_progress(r),
+        )
+        total_installed += sum(1 for r in results if r.success and not r.skipped)
 
-    # Show completion
-    show_completion(commands_installed, skills_installed)
+    show_completion(total_installed, agents, action="installed")
 
 
 @app.command()
 def uninstall(
     agent: Annotated[
-        Optional[str],
+        Optional[list[str]],
         typer.Option(
             "--agent",
             "-a",
-            help="Target agent: claude-code, codex, or opencode",
-        ),
-    ] = None,
-    commands: Annotated[
-        Optional[list[str]],
-        typer.Option(
-            "--commands",
-            "-c",
-            help="Uninstall specific commands by name",
+            help="Target agent (repeatable): claude-code, codex, or opencode",
         ),
     ] = None,
     skills: Annotated[
@@ -310,25 +217,11 @@ def uninstall(
             help="Uninstall specific skills by name",
         ),
     ] = None,
-    commands_only: Annotated[
-        bool,
-        typer.Option(
-            "--commands-only",
-            help="Interactive mode: only prompt for commands",
-        ),
-    ] = False,
-    skills_only: Annotated[
-        bool,
-        typer.Option(
-            "--skills-only",
-            help="Interactive mode: only prompt for skills",
-        ),
-    ] = False,
     all_items: Annotated[
         bool,
         typer.Option(
             "--all",
-            help="Uninstall all commands and skills",
+            help="Uninstall all skills",
         ),
     ] = False,
     list_items: Annotated[
@@ -336,7 +229,7 @@ def uninstall(
         typer.Option(
             "--list",
             "-l",
-            help="List installed commands and skills",
+            help="List installed skills",
         ),
     ] = False,
     dry_run: Annotated[
@@ -355,140 +248,77 @@ def uninstall(
         ),
     ] = False,
 ) -> None:
-    """Uninstall commands and skills from Claude Code, Codex, or OpenCode."""
-    # Validate agent is provided
-    if not agent:
-        show_error("--agent is required. Use 'claude-code', 'codex', or 'opencode'.")
-        raise typer.Exit(1)
+    """Uninstall skills from Claude Code, Codex, or OpenCode."""
+    # Resolve agents
+    agents = list(agent) if agent else []
+    if agents:
+        validate_agents(agents)
 
-    # Validate agent name
-    if agent not in ("claude-code", "codex", "opencode"):
-        show_error(
-            f"Unknown agent: {agent}. Must be 'claude-code', 'codex', or 'opencode'."
-        )
-        raise typer.Exit(1)
-
-    # Get target directories
-    commands_dir, skills_dir = get_target_dirs(agent)
-
-    # Discover installed items
-    installed_commands = discover_installed_commands(commands_dir)
-    installed_skills = discover_installed_skills(skills_dir)
-
-    # Handle --list
-    if list_items:
-        show_installed_list(installed_commands, installed_skills)
-        raise typer.Exit()
-
-    # Validate mutually exclusive options
-    selector_count = sum(
-        [
-            bool(commands),
-            bool(skills),
-            commands_only,
-            skills_only,
-            all_items,
-        ]
-    )
-    if all_items and selector_count > 1:
-        show_error(
-            "--all cannot be combined with --commands, --skills, --commands-only, or --skills-only"
-        )
-        raise typer.Exit(1)
-
-    # Determine which items to uninstall
-    selected_commands: list[str] = []
-    selected_skills: list[str] = []
-
-    if all_items:
-        # Uninstall all
-        selected_commands = [c.name for c in installed_commands]
-        selected_skills = [s.name for s in installed_skills]
-    elif commands or skills:
-        # Direct specification mode
-        if commands:
-            valid, invalid = validate_names(commands, installed_commands)
-            if invalid:
-                show_invalid_names(
-                    invalid, "commands", [c.name for c in installed_commands]
-                )
-                raise typer.Exit(1)
-            selected_commands = valid
-
-        if skills:
-            valid, invalid = validate_names(skills, installed_skills)
-            if invalid:
-                show_invalid_names(
-                    invalid, "skills", [s.name for s in installed_skills]
-                )
-                raise typer.Exit(1)
-            selected_skills = valid
-    else:
-        # Interactive mode
-        console.print(f"\n[bold cyan]Uninstall from {agent}[/bold cyan]")
-        console.print(f"[dim]Commands: {commands_dir}[/dim]")
-        console.print(f"[dim]Skills:   {skills_dir}[/dim]\n")
-
-        if not installed_commands and not installed_skills:
-            console.print("[yellow]No commands or skills installed.[/yellow]")
+    # Agent is required for all uninstall operations
+    if not agents:
+        agents = interactive_select_agents()
+        if not agents:
+            console.print("[yellow]No agents selected.[/yellow]")
             raise typer.Exit()
 
-        if not skills_only:
-            selected_commands = interactive_select(
-                installed_commands, "commands to uninstall"
-            )
+    # Discover installed skills (union across selected agents)
+    all_installed: dict[str, ItemInfo] = {}
+    for ag in agents:
+        skills_dir = get_skills_dir(ag)
+        for item in discover_installed_skills(skills_dir):
+            if item.name not in all_installed:
+                all_installed[item.name] = item
 
-        if not commands_only:
-            selected_skills = interactive_select(
-                installed_skills, "skills to uninstall"
-            )
+    installed_skills = sorted(all_installed.values(), key=lambda x: x.name)
 
-    # Nothing to uninstall?
-    if not selected_commands and not selected_skills:
+    # --list
+    if list_items:
+        show_installed_list(installed_skills)
+        raise typer.Exit()
+
+    # Determine selected skills
+    if all_items:
+        selected_names = [s.name for s in installed_skills]
+    elif skills:
+        valid, invalid = validate_names(skills, installed_skills)
+        if invalid:
+            show_invalid_names(invalid, [s.name for s in installed_skills])
+            raise typer.Exit(1)
+        selected_names = valid
+    else:
+        if not installed_skills:
+            console.print("[yellow]No skills installed for selected agents.[/yellow]")
+            raise typer.Exit()
+        selected_names = interactive_select_skills(installed_skills, action="uninstall")
+
+    if not selected_names:
         console.print("[yellow]Nothing to uninstall.[/yellow]")
         raise typer.Exit()
 
-    # Show summary
-    show_uninstall_summary(selected_commands, selected_skills, commands_dir, skills_dir)
-
-    # Confirm uninstallation
-    if not confirm_uninstall(auto_yes=yes):
-        console.print("[yellow]Uninstallation cancelled.[/yellow]")
-        raise typer.Exit()
-
-    # Get item objects
-    commands_to_uninstall = [
-        get_item_by_name(installed_commands, name) for name in selected_commands
-    ]
-    commands_to_uninstall = [c for c in commands_to_uninstall if c is not None]
-
-    skills_to_uninstall = [
-        get_item_by_name(installed_skills, name) for name in selected_skills
-    ]
-    skills_to_uninstall = [s for s in skills_to_uninstall if s is not None]
-
-    # Uninstall
     if dry_run:
         console.print("[cyan]Dry run - no files will be deleted:[/cyan]")
 
-    console.print("\nUninstalling...")
+    # Uninstall from each agent
+    total_removed = 0
+    selected_set = set(selected_names)
+    for ag in agents:
+        skills_dir = get_skills_dir(ag)
+        agent_installed = discover_installed_skills(skills_dir)
+        to_remove = [s for s in agent_installed if s.name in selected_set]
 
-    def progress_callback(result: UninstallResult) -> None:
-        show_uninstall_progress(result.name, result.success, result.skipped)
+        if not to_remove:
+            continue
 
-    command_results, skill_results = uninstall_items(
-        commands=commands_to_uninstall,
-        skills=skills_to_uninstall,
-        dry_run=dry_run,
-        progress_callback=progress_callback,
-    )
+        console.print(f"\nUninstalling from [bold]{ag}[/bold] ({skills_dir})...")
 
-    # Count results
-    commands_removed = sum(1 for r in command_results if r.success and not r.skipped)
-    skills_removed = sum(1 for r in skill_results if r.success and not r.skipped)
+        results = uninstall_skills(
+            skills=to_remove,
+            dry_run=dry_run,
+            progress_callback=lambda r: show_progress(r, action="removed"),
+        )
+        total_removed += sum(1 for r in results if r.success and not r.skipped)
 
-    # Show completion
-    show_uninstall_completion(commands_removed, skills_removed)
+    show_completion(total_removed, agents, action="removed")
 
 
 if __name__ == "__main__":

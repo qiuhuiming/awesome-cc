@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan skills/ and commands/ directories and sync [tool.setuptools.data-files] in pyproject.toml."""
+"""Scan skills/ directory and sync [tool.setuptools.data-files] in pyproject.toml."""
 
 import re
 from collections import defaultdict
@@ -41,7 +41,7 @@ def generate_data_files_section() -> str:
     """Generate the [tool.setuptools.data-files] TOML section content."""
     all_groups: dict[str, list[str]] = {}
 
-    for dirname in ("commands", "skills"):
+    for dirname in ("skills",):
         dir_path = PROJECT_ROOT / dirname
         all_groups.update(scan_directory(dir_path, dirname))
 
@@ -89,7 +89,7 @@ def main() -> None:
 
     # Print summary
     groups = {}
-    for dirname in ("commands", "skills"):
+    for dirname in ("skills",):
         dir_path = PROJECT_ROOT / dirname
         groups.update(scan_directory(dir_path, dirname))
 
