@@ -57,4 +57,4 @@ description: Brief description
 
 **Skills**: Create a new subdirectory in `skills/` with a `SKILL.md` file. Include any supporting scripts or resources in the same directory.
 
-**Important**: After adding new commands or skills, update `pyproject.toml` under `[tool.setuptools.data-files]` to include the new files. This ensures they are included when the package is installed via `uvx` or `pip`.
+**MANDATORY**: After ANY change to files under `skills/` or `commands/` (add, remove, rename), you MUST run `python scripts/sync_pyproject.py` to sync `pyproject.toml` data-files. Do NOT manually edit the `[tool.setuptools.data-files]` section — the script is the single source of truth.
