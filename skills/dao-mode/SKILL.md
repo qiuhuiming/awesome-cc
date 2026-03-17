@@ -8,7 +8,7 @@ description: >
 
 # Dao Mode — 道
 
-When a message starts with `dao`, enter discovery mode.
+When a message starts with `dao`, enter discovery mode. In the Dao Mode, discuss high-level design questions. Your role should be like a team lead or orchestrator. You're planning, not coding.
 
 ## Rules
 
