@@ -50,11 +50,13 @@ include-package-data = true
 
 # Include skills directories in the distribution
 [tool.setuptools.data-files]
+"share/awesome-cc/skills/ask-mode" = ["skills/ask-mode/SKILL.md"]
 "share/awesome-cc/skills/codex-exec" = ["skills/codex-exec/SKILL.md"]
 "share/awesome-cc/skills/dao-mode" = ["skills/dao-mode/SKILL.md"]
 "share/awesome-cc/skills/notebooklm" = ["skills/notebooklm/SKILL.md"]
 "share/awesome-cc/skills/orchestrate" = ["skills/orchestrate/SKILL.md"]
 "share/awesome-cc/skills/orchestrate/references" = ["skills/orchestrate/references/teammate-prompt-template.md"]
+"share/awesome-cc/skills/proactive-ask" = ["skills/proactive-ask/SKILL.md"]
 "share/awesome-cc/skills/skill-creator" = [
     "skills/skill-creator/LICENSE.txt",
     "skills/skill-creator/SKILL.md",
